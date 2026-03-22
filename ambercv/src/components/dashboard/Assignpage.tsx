@@ -18,6 +18,9 @@ interface Employee {
     email: string;
 }
 
+const IconSearch = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>;
+const IconUsers = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>;
+
 const AssignPage: React.FC = () => {
     const [cvs, setCvs] = useState<CV[]>([]);
     const [employees, setEmployees] = useState<Employee[]>([]);
@@ -28,7 +31,7 @@ const AssignPage: React.FC = () => {
     const [assignments, setAssignments] = useState<Record<string, string>>({});
 
     useEffect(() => {
-        const unsub1 = onValue(ref(db, "cvs"), snap => {
+        const u1 = onValue(ref(db, "cvs"), snap => {
             const data = snap.val() || {};
             const list: CV[] = Object.entries(data).map(([id, v]) => ({ id, ...(v as any) }));
             setCvs(list);
@@ -37,19 +40,19 @@ const AssignPage: React.FC = () => {
             setAssignments(init);
             setLoading(false);
         });
-        const unsub2 = onValue(ref(db, "users"), snap => {
+        const u2 = onValue(ref(db, "users"), snap => {
             const data = snap.val() || {};
             const list: Employee[] = Object.entries(data)
                 .map(([id, v]) => ({ id, ...(v as any) }))
                 .filter((u: any) => u.role === "employee");
             setEmployees(list);
         });
-        return () => { unsub1(); unsub2(); };
+        return () => { u1(); u2(); };
     }, []);
 
     const filtered = cvs.filter(cv => {
-        const matchSearch = cv.candidateName.toLowerCase().includes(search.toLowerCase()) ||
-            cv.position.toLowerCase().includes(search.toLowerCase());
+        const q = search.toLowerCase();
+        const matchSearch = cv.candidateName.toLowerCase().includes(q) || cv.position.toLowerCase().includes(q);
         if (!matchSearch) return false;
         if (filter === "unassigned") return !cv.assignedTo;
         if (filter === "assigned") return !!cv.assignedTo;
@@ -79,61 +82,59 @@ const AssignPage: React.FC = () => {
                 <p className="page-subtitle">Distribute CVs across your team and track workload</p>
             </div>
 
-            {/* Team workload summary */}
-            <div style={{ display: "flex", gap: 12, marginBottom: 28, flexWrap: "wrap" }} className="fade-up-1">
-                {empCounts.map(e => (
-                    <div key={e.id} className="card-sm" style={{ minWidth: 160, flex: "1 1 160px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                            <div style={{
-                                width: 32, height: 32, borderRadius: "50%",
-                                background: "linear-gradient(135deg, var(--green), var(--green-dim))",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                fontSize: 12, fontWeight: 700, color: "#0a0f0d", fontFamily: "var(--font-head)",
-                            }}>
-                                {e.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
+            {/* Team workload */}
+            {empCounts.length > 0 && (
+                <div style={{ display: "flex", gap: 12, marginBottom: 28, flexWrap: "wrap" }} className="fade-up-1">
+                    {empCounts.map(e => (
+                        <div key={e.id} className="card-sm" style={{ minWidth: 160, flex: "1 1 160px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                <div style={{
+                                    width: 32, height: 32, borderRadius: "50%",
+                                    background: "linear-gradient(135deg, var(--green), var(--green-dim))",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    fontSize: 12, fontWeight: 700, color: "#0a0f0d", fontFamily: "var(--font-head)", flexShrink: 0,
+                                }}>
+                                    {e.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{e.name}</div>
+                                    <div style={{ fontSize: 12, color: "var(--text-3)" }}>{e.count} CV{e.count !== 1 ? "s" : ""}</div>
+                                </div>
                             </div>
-                            <div>
-                                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{e.name}</div>
-                                <div style={{ fontSize: 12, color: "var(--text-3)" }}>{e.count} CV{e.count !== 1 ? "s" : ""}</div>
+                            <div className="progress-bar" style={{ marginTop: 10 }}>
+                                <div className="progress-fill" style={{ width: `${Math.min((e.count / 10) * 100, 100)}%`, background: e.count > 7 ? "var(--red)" : undefined }} />
                             </div>
                         </div>
-                        <div className="progress-bar" style={{ marginTop: 10 }}>
-                            <div className="progress-fill" style={{ width: `${Math.min((e.count / 10) * 100, 100)}%`, background: e.count > 7 ? "var(--red)" : undefined }} />
-                        </div>
-                    </div>
-                ))}
-                {empCounts.length === 0 && (
-                    <div style={{ fontSize: 13, color: "var(--text-3)", padding: "12px 0" }}>No employees found. Add employees first.</div>
-                )}
-            </div>
+                    ))}
+                </div>
+            )}
 
             {/* Filters */}
             <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }} className="fade-up-2">
                 <div style={{ position: "relative", flex: "1 1 220px" }}>
-                    <svg style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text-3)" }} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        placeholder="Search candidate or position..."
-                        style={{ paddingLeft: 36, width: "100%" }}
-                    />
+                    <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text-3)", pointerEvents: "none", display: "flex" }}>
+                        <IconSearch />
+                    </span>
+                    <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search candidate or position..." style={{ paddingLeft: 36, width: "100%" }} />
                 </div>
                 {(["all", "unassigned", "assigned"] as const).map(f => (
                     <button key={f} className={`btn ${filter === f ? "btn-primary" : "btn-ghost"}`} onClick={() => setFilter(f)} style={{ textTransform: "capitalize" }}>
-                        {f} {f !== "all" && <span className="nav-badge" style={{ background: f === "unassigned" ? "#f87171" : "var(--green)", marginLeft: 4 }}>
-                            {f === "unassigned" ? cvs.filter(c => !c.assignedTo).length : cvs.filter(c => !!c.assignedTo).length}
-                        </span>}
+                        {f}
+                        {f !== "all" && (
+                            <span className="nav-badge" style={{ background: f === "unassigned" ? "#f87171" : "var(--green)", marginLeft: 4 }}>
+                                {f === "unassigned" ? cvs.filter(c => !c.assignedTo).length : cvs.filter(c => !!c.assignedTo).length}
+                            </span>
+                        )}
                     </button>
                 ))}
             </div>
 
-            {/* CV list */}
+            {/* Table */}
             {loading ? (
                 <div style={{ textAlign: "center", padding: 48 }}><span className="spinner" /></div>
             ) : filtered.length === 0 ? (
                 <div className="empty-state card">
-                    <div className="empty-state-icon">🔍</div>
+                    <div style={{ color: "var(--text-3)", opacity: 0.4, marginBottom: 12, display: "flex", justifyContent: "center" }}><IconUsers /></div>
                     <h3>No CVs found</h3>
                     <p>Try a different filter or search term.</p>
                 </div>
@@ -146,7 +147,7 @@ const AssignPage: React.FC = () => {
                                 <th>Position</th>
                                 <th>Status</th>
                                 <th>Progress</th>
-                                <th style={{ minWidth: 200 }}>Assigned Employee</th>
+                                <th style={{ minWidth: 200 }}>Assign To</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -178,9 +179,7 @@ const AssignPage: React.FC = () => {
                                             style={{ width: "100%", padding: "8px 12px" }}
                                         >
                                             <option value="">— Unassigned —</option>
-                                            {employees.map(e => (
-                                                <option key={e.id} value={e.id}>{e.name}</option>
-                                            ))}
+                                            {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
                                         </select>
                                     </td>
                                     <td>

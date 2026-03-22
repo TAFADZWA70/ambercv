@@ -10,6 +10,10 @@ interface Employee {
     createdAt?: number;
 }
 
+const IconUsers = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>;
+const IconEdit = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>;
+const IconClose = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>;
+
 const EmployeesPage: React.FC = () => {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [cvCounts, setCvCounts] = useState<Record<string, number>>({});
@@ -20,13 +24,13 @@ const EmployeesPage: React.FC = () => {
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        const unsub1 = onValue(ref(db, "users"), snap => {
+        const u1 = onValue(ref(db, "users"), snap => {
             const data = snap.val() || {};
             const list: Employee[] = Object.entries(data).map(([id, v]) => ({ id, ...(v as any) }));
             setEmployees(list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
             setLoading(false);
         });
-        const unsub2 = onValue(ref(db, "cvs"), snap => {
+        const u2 = onValue(ref(db, "cvs"), snap => {
             const data = snap.val() || {};
             const counts: Record<string, number> = {};
             Object.values(data).forEach((cv: any) => {
@@ -34,7 +38,7 @@ const EmployeesPage: React.FC = () => {
             });
             setCvCounts(counts);
         });
-        return () => { unsub1(); unsub2(); };
+        return () => { u1(); u2(); };
     }, []);
 
     const openEdit = (emp: Employee) => {
@@ -89,12 +93,12 @@ const EmployeesPage: React.FC = () => {
                     <span style={{ fontFamily: "var(--font-head)", fontWeight: 700, fontSize: 18, color: "var(--text)" }}>
                         {cvCounts[emp.id] || 0}
                     </span>
-                    <span style={{ fontSize: 12, color: "var(--text-3)" }}>CVs assigned</span>
+                    <span style={{ fontSize: 12, color: "var(--text-3)" }}>assigned</span>
                 </div>
             </td>
             <td>
                 <div style={{ display: "flex", gap: 6 }}>
-                    <button className="btn btn-sm btn-ghost" onClick={() => openEdit(emp)}>Edit</button>
+                    <button className="btn-icon" onClick={() => openEdit(emp)} title="Edit"><IconEdit /></button>
                     <button className="btn btn-sm btn-danger" onClick={() => setDeleteConfirm(emp.id)}>Remove</button>
                 </div>
             </td>
@@ -112,60 +116,30 @@ const EmployeesPage: React.FC = () => {
                 <div style={{ textAlign: "center", padding: 60 }}><span className="spinner" /></div>
             ) : (
                 <>
-                    {/* Summary cards */}
                     <div className="stats-grid fade-up-1" style={{ marginBottom: 28 }}>
-                        <div className="stat-card">
-                            <div className="stat-value">{employees.length}</div>
-                            <div className="stat-label">Total members</div>
-                        </div>
-                        <div className="stat-card">
-                            <div className="stat-value">{staff.length}</div>
-                            <div className="stat-label">Employees</div>
-                        </div>
-                        <div className="stat-card">
-                            <div className="stat-value">{owners.length}</div>
-                            <div className="stat-label">Admins / Owners</div>
-                        </div>
+                        <div className="stat-card"><div className="stat-value">{employees.length}</div><div className="stat-label">Total members</div></div>
+                        <div className="stat-card"><div className="stat-value">{staff.length}</div><div className="stat-label">Employees</div></div>
+                        <div className="stat-card"><div className="stat-value">{owners.length}</div><div className="stat-label">Admins</div></div>
                     </div>
 
-                    {/* Employees table */}
                     {staff.length > 0 && (
                         <>
-                            <div className="section-header fade-up-2">
-                                <span className="section-title">Employees ({staff.length})</span>
-                            </div>
+                            <div className="section-header fade-up-2"><span className="section-title">Employees ({staff.length})</span></div>
                             <div className="table-wrap fade-up-2" style={{ marginBottom: 28 }}>
                                 <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Member</th>
-                                            <th>Role</th>
-                                            <th>Workload</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
+                                    <thead><tr><th>Member</th><th>Role</th><th>Workload</th><th>Actions</th></tr></thead>
                                     <tbody>{staff.map(e => <EmployeeRow key={e.id} emp={e} />)}</tbody>
                                 </table>
                             </div>
                         </>
                     )}
 
-                    {/* Owners table */}
                     {owners.length > 0 && (
                         <>
-                            <div className="section-header fade-up-3">
-                                <span className="section-title">Admins ({owners.length})</span>
-                            </div>
+                            <div className="section-header fade-up-3"><span className="section-title">Admins ({owners.length})</span></div>
                             <div className="table-wrap fade-up-3">
                                 <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Member</th>
-                                            <th>Role</th>
-                                            <th>Workload</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
+                                    <thead><tr><th>Member</th><th>Role</th><th>Workload</th><th>Actions</th></tr></thead>
                                     <tbody>{owners.map(e => <EmployeeRow key={e.id} emp={e} />)}</tbody>
                                 </table>
                             </div>
@@ -174,7 +148,7 @@ const EmployeesPage: React.FC = () => {
 
                     {employees.length === 0 && (
                         <div className="empty-state card">
-                            <div className="empty-state-icon">👥</div>
+                            <div style={{ color: "var(--text-3)", opacity: 0.4, marginBottom: 12, display: "flex", justifyContent: "center" }}><IconUsers /></div>
                             <h3>No team members yet</h3>
                             <p>Users appear here once they sign up to the platform.</p>
                         </div>
@@ -188,9 +162,7 @@ const EmployeesPage: React.FC = () => {
                     <div className="modal" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h3 className="modal-title">Edit Member</h3>
-                            <button className="btn-icon" onClick={() => setEditModal(null)}>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                            </button>
+                            <button className="btn-icon" onClick={() => setEditModal(null)}><IconClose /></button>
                         </div>
                         <div className="modal-body">
                             <div className="form-group">
@@ -223,9 +195,7 @@ const EmployeesPage: React.FC = () => {
             {deleteConfirm && (
                 <div className="modal-overlay" onClick={() => setDeleteConfirm(null)}>
                     <div className="modal" style={{ maxWidth: 400 }} onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3 className="modal-title">Remove Member?</h3>
-                        </div>
+                        <div className="modal-header"><h3 className="modal-title">Remove Member?</h3></div>
                         <div className="modal-body">
                             <p style={{ fontSize: 14, color: "var(--text-2)", marginBottom: 20 }}>
                                 This will remove the member from the database. Their user account will remain but they will lose access to this system.
