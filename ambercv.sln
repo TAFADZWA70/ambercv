@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36811.4 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "ambercv", "ambercv\ambercv.esproj", "{EB21F783-E1C1-F481-D58C-A293C04EFF74}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EB21F783-E1C1-F481-D58C-A293C04EFF74}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB21F783-E1C1-F481-D58C-A293C04EFF74}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB21F783-E1C1-F481-D58C-A293C04EFF74}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{EB21F783-E1C1-F481-D58C-A293C04EFF74}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB21F783-E1C1-F481-D58C-A293C04EFF74}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB21F783-E1C1-F481-D58C-A293C04EFF74}.Release|Any CPU.Deploy.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C4F7B609-5984-48EA-AF8F-9F2CB4CC7230}
+	EndGlobalSection
+EndGlobal
