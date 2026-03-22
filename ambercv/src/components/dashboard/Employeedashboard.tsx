@@ -16,10 +16,12 @@ interface CV {
 
 interface Template {
     id: string;
-    name: string;
-    description: string;
-    sections: string[];
-    createdAt: number;
+    name: "CV Creation" | "CV Revamp";
+    fileName: string;
+    fileType: string;
+    fileSize: number;
+    fileBase64: string;
+    uploadedAt: number;
 }
 
 interface EmployeeDashboardProps {
@@ -58,7 +60,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ onNavigate }) => 
     const [newProgress, setNewProgress] = useState(0);
     const [newNote, setNewNote] = useState("");
     const [saving, setSaving] = useState(false);
-    const [templateModal, setTemplateModal] = useState<Template | null>(null);
+
 
     useEffect(() => {
         if (!appUser?.uid) return;
@@ -191,53 +193,48 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ onNavigate }) => 
             {templates.length === 0 ? (
                 <div className="card fade-up-3" style={{ padding: "28px 24px", textAlign: "center" }}>
                     <div style={{ color: "var(--text-3)", marginBottom: 8, display: "flex", justifyContent: "center" }}><IconLayout /></div>
-                    <p style={{ fontSize: 13, color: "var(--text-3)" }}>No templates have been created yet.</p>
+                    <p style={{ fontSize: 13, color: "var(--text-3)" }}>No templates have been uploaded yet.</p>
                 </div>
             ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }} className="fade-up-3">
-                    {templates.map(t => (
-                        <div key={t.id} className="card" style={{ display: "flex", flexDirection: "column", gap: 12, cursor: "pointer" }}
-                            onClick={() => setTemplateModal(t)}>
-                            {/* Header */}
-                            <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                                <div style={{
-                                    width: 36, height: 36, borderRadius: 10,
-                                    background: "var(--green-glow)", border: "1px solid #4ade8030",
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                    flexShrink: 0, color: "var(--green)",
-                                }}>
-                                    <IconLayout />
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }} className="fade-up-3">
+                    {templates.map(t => {
+                        const isPdf = t.fileType === "application/pdf";
+                        const color = isPdf ? "#f87171" : "#60a5fa";
+                        const bg = isPdf ? "#f8717120" : "#60a5fa20";
+                        const label = isPdf ? "PDF" : "DOCX";
+                        const mime = t.fileType || "application/octet-stream";
+                        return (
+                            <div key={t.id} className="card" style={{ display: "flex", alignItems: "center", gap: 16, padding: "16px 20px" }}>
+                                {/* File icon */}
+                                <div style={{ width: 44, height: 44, borderRadius: 10, background: bg, border: `1px solid ${color}30`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flexShrink: 0, gap: 2 }}>
+                                    <span style={{ color, display: "flex" }}><IconLayout /></span>
+                                    <span style={{ fontSize: 9, fontWeight: 800, color, fontFamily: "var(--font-head)", letterSpacing: 0.5 }}>{label}</span>
                                 </div>
+
+                                {/* Info */}
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ fontFamily: "var(--font-head)", fontWeight: 700, fontSize: 15, color: "var(--text)", marginBottom: 3 }}>{t.name}</div>
-                                    {t.description && (
-                                        <div style={{ fontSize: 12, color: "var(--text-3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.description}</div>
-                                    )}
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3, flexWrap: "wrap" }}>
+                                        <span style={{ fontWeight: 700, color: "var(--text)", fontSize: 14 }}>{t.name}</span>
+                                        <span className={`badge ${t.name === "CV Creation" ? "badge-green" : "badge-blue"}`} style={{ fontSize: 11 }}>{t.name}</span>
+                                    </div>
+                                    <div style={{ fontSize: 12, color: "var(--text-3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                        {t.fileName} &nbsp;·&nbsp; {t.fileSize < 1024 * 1024 ? `${(t.fileSize / 1024).toFixed(0)} KB` : `${(t.fileSize / (1024 * 1024)).toFixed(1)} MB`}
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div className="divider" style={{ margin: 0 }} />
-
-                            {/* Sections preview */}
-                            <div>
-                                <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 0.8, color: "var(--text-3)", marginBottom: 8, fontFamily: "var(--font-head)", fontWeight: 600 }}>
-                                    {t.sections.length} Section{t.sections.length !== 1 ? "s" : ""}
-                                </div>
-                                <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                                    {t.sections.slice(0, 4).map((s, i) => (
-                                        <span key={i} className="tag" style={{ fontSize: 11 }}>{s}</span>
-                                    ))}
-                                    {t.sections.length > 4 && (
-                                        <span className="tag" style={{ fontSize: 11, color: "var(--text-3)" }}>+{t.sections.length - 4} more</span>
-                                    )}
-                                </div>
+                                {/* Download */}
+                                <a
+                                    href={`data:${mime};base64,${t.fileBase64}`}
+                                    download={t.fileName}
+                                    className="btn btn-sm btn-primary"
+                                    style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0 }}
+                                >
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                                    Download
+                                </a>
                             </div>
-
-                            <div style={{ fontSize: 12, color: "var(--green)", fontWeight: 500, marginTop: 2 }}>
-                                View details →
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
 
@@ -283,40 +280,6 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({ onNavigate }) => 
                 </div>
             )}
 
-            {/* Template detail modal */}
-            {templateModal && (
-                <div className="modal-overlay" onClick={() => setTemplateModal(null)}>
-                    <div className="modal" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3 className="modal-title">{templateModal.name}</h3>
-                            <button className="btn-icon" onClick={() => setTemplateModal(null)}><IconClose /></button>
-                        </div>
-                        <div className="modal-body">
-                            {templateModal.description && (
-                                <p style={{ fontSize: 14, color: "var(--text-2)", marginBottom: 20, lineHeight: 1.6 }}>{templateModal.description}</p>
-                            )}
-                            <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: 0.8, color: "var(--text-3)", marginBottom: 12, fontFamily: "var(--font-head)", fontWeight: 600 }}>
-                                All Sections ({templateModal.sections.length})
-                            </div>
-                            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                                {templateModal.sections.map((s, i) => (
-                                    <div key={i} style={{
-                                        display: "flex", alignItems: "center", gap: 12,
-                                        padding: "10px 14px",
-                                        background: "var(--bg-3)", border: "1px solid var(--border)", borderRadius: 8,
-                                    }}>
-                                        <span style={{ fontSize: 11, color: "var(--text-3)", fontFamily: "var(--font-head)", fontWeight: 700, width: 20, textAlign: "center" }}>{i + 1}</span>
-                                        <span style={{ fontSize: 14, color: "var(--text-2)" }}>{s}</span>
-                                    </div>
-                                ))}
-                            </div>
-                            <div style={{ marginTop: 20, display: "flex", justifyContent: "flex-end" }}>
-                                <button className="btn btn-ghost" onClick={() => setTemplateModal(null)}>Close</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };
